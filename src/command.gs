@@ -32,6 +32,7 @@ let optimist = require 'optimist'
     w: { alias: "watch", +boolean, desc: "Watch for changes and compile as-needed" }
     options: { +string, desc: "a JSON object of options to pass into the compiler" }
     coverage: { +boolean, desc: "Instrument with _\$jscoverage support" }
+    commonjs: { +boolean, desc: "Join all the generated CommonJS modules into a signle file which can be used in browser" }
   }
 
 if has-gjs
@@ -67,13 +68,14 @@ optimist.check #(argv)
   exclusive \interactive, \_, \stdin, \eval
   depend \watch, \compile
   depend \join, \output
+  depend \commonjs, \output
   if argv.watch
     if argv.join
       throw "TODO: --watch with --join"
     if argv.map
       throw "TODO: --watch with --map"
-  if argv._.length > 1 and argv.map and not argv.join
-    throw "Cannot specify --map with multiple files unless using --join"
+  if argv._.length > 1 and argv.map and not (argv.join or argv.commonjs)
+    throw "Cannot specify --map with multiple files unless using --join or --commonjs"
   if argv.map and not is-string! argv.map
     throw "Must specify a filename with --map"
   if argv.options
@@ -123,6 +125,8 @@ let main = promise!
     options.bare := true
   if argv.coverage
     options.coverage := true
+  if argv.commonjs
+    options.brequire := true
 
   if argv["no-prelude"]
     options.no-prelude := true
@@ -221,7 +225,7 @@ let main = promise!
         base-dir
       path.join dir, path.basename(filename, path.extname(filename)) & ".js"
 
-  if filenames.length > 1 and argv.join
+  if (filenames.length > 1 and argv.join) or (filenames.length > 0 and argv.commonjs)
     let base-filenames = for filename in filenames
       path.basename filename
     process.stdout.write "Compiling $(base-filenames.join ', ') ... "

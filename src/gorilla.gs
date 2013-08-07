@@ -166,6 +166,9 @@ let handle-ast-pipe(mutable node, options, file-sources)
     node := options.ast-pipe node, file-sources, ast
     if node not instanceof ast.Root
       throw Error "Expected astPipe to return a Root, got $(typeof! node)"
+  if options.brequire
+    require! breq: './brequire-wrapper'
+    node := breq node, file-sources
   if options.coverage
     require! './coverage'
     let coverage-name = if is-string! options.coverage
