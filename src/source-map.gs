@@ -4,7 +4,7 @@ require! source-map: "source-map"
 require! path
 
 module.exports := class SourceMap
-  def constructor(@source-map-file, @generated-file, source-root)
+  def constructor(@source-map-file, @generated-file = 'temp', source-root)
     @generator := new source-map.SourceMapGenerator {
       file: path.relative path.dirname(source-map-file), generated-file
       source-root

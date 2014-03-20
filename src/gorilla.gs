@@ -9,6 +9,7 @@ require! os
 require! fs
 require! path
 require! SourceMap: './source-map'
+let {SourceMapConsumer} = require 'source-map'
 let {write-file-with-mkdirp, write-file-with-mkdirp-sync} = require('./utils')
 let {is-acceptable-ident} = require './jsutils'
 
@@ -233,6 +234,8 @@ exports.ast-sync := #(source, options = {})
 exports.compile := promise! #(source, options = {})*
   let sync = options.sync
   let start-time = new Date().get-time()
+  if options.filename
+    options.source-map := SourceMap(options.filename, null, "")
   let translated = if sync
     exports.ast-sync source, options
   else
@@ -389,7 +392,68 @@ exports.eval := promise! #(source, options = {})*
 exports.eval-sync := #(source, options = {})
   exports.eval.sync source, {} <<< options <<< {+sync}
 
+let patch-stack-trace(options)
+  if options.stack-trace-patched
+    return
+  options.stack-trace-patched := true
+  Error.prepare-stack-trace := #(err, stack)
+    let get-source-mapping = #(pos)
+      let mapping = new SourceMapConsumer options.source-map.to-string()
+      mapping.original-position-for pos
+    let format-source-position = #(frame)
+      let mutable file-name = undefined
+      let mutable file-location = ''
+      if frame.is-native()
+        file-location := 'native'
+      else
+        if frame.is-eval()
+          file-name := frame.get-script-name-or-sourceURL()
+          unless file-name
+            file-location := "$(frame.get-eval-origin()), "
+        else
+          file-name := frame.get-file-name()
+        file-name or= "<anonymous>"
+        let line = frame.get-line-number()
+        let column = frame.get-column-number()
+        let source = get-source-mapping {line, column}
+        if file-name.index-of('.js') < 1
+          if source.line?
+            file-location := "$file-name:$(source.line):$(source.column), <js>:$line:$column"
+          else
+            file-location := "$file-name <js>:$line:$column"
+        else
+          file-location := "$file-name:$line:$column"
+        let function-name = frame.get-function-name()
+        let is-constructor = frame.is-constructor()
+        let is-method-call = not (frame.is-toplevel() or is-constructor)
+        if is-method-call
+          let method-name = frame.get-method-name()
+          let type-name = frame.get-type-name()
+          if function-name
+            let mutable tp = ''
+            let mutable as-line = ''
+            if type-name and function-name.index-of type-name
+              tp := "$(type-name)."
+            if method-name and function-name.index-of(".$(method-name)") isnt function-name.length - method-name.length - 1
+              as-line := " [as $method-name]"
+            return "$(tp)$(function-name)$(as-line) ($file-location)"
+          else
+            return "$(type-name).$(method-name or '<anonymous>') ($file-location)"
+        else if is-constructor
+          return "new $(function-name or '<anonymous>') ($file-location)"
+        else if function-name
+          return "$function-name ($file-location)"
+        else
+          return file-location
+
+    let frames = for frame in stack
+      if frame.get-function() is exports.run
+        break
+      "  at $(format-source-position frame)"
+    "$(err.to-string())\n$(frames.join '\n')\n"
+
 exports.run := promise! #(source, options = {})*
+  options.stack-trace-patched := false
   let sync = options.sync
   if is-void! process
     return if sync
@@ -410,6 +474,7 @@ exports.run := promise! #(source, options = {})*
       exports.compile-sync source, options
     else
       yield exports.compile source, options
+    patch-stack-trace options
     main-module._compile compiled.code, main-module.filename
   else
     main-module._compile source, main-module.filename
