@@ -288,7 +288,7 @@
               args = __slice.call(arguments, 1);
               if (args.length) {
                 return nextTick(function () {
-                  func.apply(void 0, __toArray(args));
+                  func.apply(void 0, args);
                 });
               } else {
                 return nextTick(func);
@@ -9034,7 +9034,7 @@
               args = __slice.call(arguments, 1);
               if (args.length) {
                 return nextTick(function () {
-                  func.apply(void 0, __toArray(args));
+                  func.apply(void 0, args);
                 });
               } else {
                 return nextTick(func);
@@ -17014,7 +17014,7 @@
                 return function (args) {
                   var rest;
                   rest = __slice.call(arguments, 1);
-                  return inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest))).reduce(this.parser);
+                  return inner.apply(this, [reduceObject(this.parser, args)].concat(rest)).reduce(this.parser);
                 };
               }(handler));
               return {
@@ -17089,7 +17089,7 @@
                   return function (args) {
                     var rest, result;
                     rest = __slice.call(arguments, 1);
-                    result = inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest)));
+                    result = inner.apply(this, [reduceObject(this.parser, args)].concat(rest));
                     if (args.inverted) {
                       return LCall(result.index, result.scope, LSymbol.unary["!"](result.index), result).reduce(this.parser);
                     } else {
@@ -17102,7 +17102,7 @@
                   return function (args) {
                     var rest;
                     rest = __slice.call(arguments, 1);
-                    return inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest))).reduce(this.parser);
+                    return inner.apply(this, [reduceObject(this.parser, args)].concat(rest)).reduce(this.parser);
                   };
                 }(handler));
               }
@@ -17177,7 +17177,7 @@
                 return function (args) {
                   var rest;
                   rest = __slice.call(arguments, 1);
-                  return inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest))).reduce(this.parser);
+                  return inner.apply(this, [reduceObject(this.parser, args)].concat(rest)).reduce(this.parser);
                 };
               }(handler));
               return {
@@ -17251,7 +17251,7 @@
                 return function (args) {
                   var rest;
                   rest = __slice.call(arguments, 1);
-                  return inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest))).reduce(this.parser);
+                  return inner.apply(this, [reduceObject(this.parser, args)].concat(rest)).reduce(this.parser);
                 };
               }(handler));
               return {
@@ -17291,7 +17291,7 @@
                 return function (args) {
                   var rest;
                   rest = __slice.call(arguments, 1);
-                  return inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest))).reduce(this.parser);
+                  return inner.apply(this, [reduceObject(this.parser, args)].concat(rest)).reduce(this.parser);
                 };
               }(handler));
               this.enterMacro(0, names);
@@ -17326,7 +17326,7 @@
                 return function (args) {
                   var rest;
                   rest = __slice.call(arguments, 1);
-                  return inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest))).reduce(this.parser);
+                  return inner.apply(this, [reduceObject(this.parser, args)].concat(rest)).reduce(this.parser);
                 };
               }(handler));
               this.enterMacro(0, names);
@@ -17364,7 +17364,7 @@
                   return function (args) {
                     var rest;
                     rest = __slice.call(arguments, 1);
-                    return reduceObject(this.parser, inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest))));
+                    return reduceObject(this.parser, inner.apply(this, [reduceObject(this.parser, args)].concat(rest)));
                   };
                 }(handler));
               } else {
@@ -17405,7 +17405,7 @@
                   return function (args) {
                     var rest, result;
                     rest = __slice.call(arguments, 1);
-                    result = inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest)));
+                    result = inner.apply(this, [reduceObject(this.parser, args)].concat(rest));
                     if (args.inverted) {
                       return LCall(result.index, result.scope, LSymbol.unary["!"](result.index), result).reduce(this.parser);
                     } else {
@@ -17418,7 +17418,7 @@
                   return function (args) {
                     var rest;
                     rest = __slice.call(arguments, 1);
-                    return inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest))).reduce(this.parser);
+                    return inner.apply(this, [reduceObject(this.parser, args)].concat(rest)).reduce(this.parser);
                   };
                 }(handler));
               }
@@ -17454,7 +17454,7 @@
                 return function (args) {
                   var rest;
                   rest = __slice.call(arguments, 1);
-                  return inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest))).reduce(this.parser);
+                  return inner.apply(this, [reduceObject(this.parser, args)].concat(rest)).reduce(this.parser);
                 };
               }(handler));
               this.enterMacro(0, ASSIGN_OPERATOR);
@@ -17489,7 +17489,7 @@
                 return function (args) {
                   var rest;
                   rest = __slice.call(arguments, 1);
-                  return inner.apply(this, [reduceObject(this.parser, args)].concat(__toArray(rest))).reduce(this.parser);
+                  return inner.apply(this, [reduceObject(this.parser, args)].concat(rest)).reduce(this.parser);
                 };
               }(handler));
               this.enterMacro(0, UNARY_OPERATOR);
@@ -29479,21 +29479,18 @@
           return tResult;
         };
         _ref[33] = function (node, args, scope, location, unassigned) {
-          var innerScope, tCatchBody, tCatchIdent, tTryBody;
+          var tCatchBody, tCatchIdent, tTryBody;
           tTryBody = translate(args[0], scope, "statement", unassigned);
-          innerScope = scope.clone(false);
-          tCatchIdent = translate(args[1], innerScope, "leftExpression");
-          tCatchBody = translate(args[2], innerScope, "statement", unassigned);
+          tCatchIdent = translate(args[1], scope, "leftExpression");
+          tCatchBody = translate(args[2], scope, "statement", unassigned);
           return function () {
-            var catchIdent, result;
+            var catchIdent;
             catchIdent = tCatchIdent();
             if (catchIdent instanceof ast.Ident) {
-              innerScope.addVariable(catchIdent);
-              innerScope.markAsParam(catchIdent);
+              scope.addVariable(catchIdent);
+              scope.markAsParam(catchIdent);
             }
-            result = ast.TryCatch(getPos(node), tTryBody(), catchIdent, tCatchBody());
-            __import(scope.variables, innerScope.variables);
-            return result;
+            return ast.TryCatch(getPos(node), tTryBody(), catchIdent, tCatchBody());
           };
         };
         _ref[34] = function (node, args, scope, location, unassigned) {
@@ -30538,7 +30535,7 @@
               args = __slice.call(arguments, 1);
               if (args.length) {
                 return nextTick(function () {
-                  func.apply(void 0, __toArray(args));
+                  func.apply(void 0, args);
                 });
               } else {
                 return nextTick(func);
@@ -32215,7 +32212,7 @@
               args = __slice.call(arguments, 1);
               if (args.length) {
                 return nextTick(function () {
-                  func.apply(void 0, __toArray(args));
+                  func.apply(void 0, args);
                 });
               } else {
                 return nextTick(func);
@@ -59417,25 +59414,11 @@
                                     0,
                                     AST$(9, 3784, 23, 0),
                                     AST$(
-                                      7,
+                                      17,
                                       3784,
                                       32,
                                       0,
-                                      AST$(
-                                        17,
-                                        3784,
-                                        32,
-                                        0,
-                                        "__toArray"
-                                      ),
-                                      0,
-                                      AST$(
-                                        17,
-                                        3784,
-                                        32,
-                                        0,
-                                        "args"
-                                      )
+                                      "args"
                                     )
                                   )
                                 )
@@ -59795,7 +59778,7 @@
               )
             ),
             type: TYPE$.any,
-            dependencies: ["__slice", "__toArray", "__typeof", "GLOBAL"]
+            dependencies: ["__slice", "__typeof", "GLOBAL"]
           },
           __defer: {
             helper: AST$(
@@ -78471,7 +78454,7 @@
                 return this.call(
                   this.func(
                     params,
-                    this.internalCall("autoReturn", body),
+                    this.internalCall("autoReturn", this.macroExpandAll(body)),
                     true
                   ),
                   values
