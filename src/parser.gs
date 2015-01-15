@@ -100,7 +100,7 @@ class Box
     if index not %% 1 or index < 0
       throw RangeError "Expected index to be a non-negative integer, got $index"
 
-let unused-caches = if DEBUG then Map()
+let unused-caches = if DEBUG then new Map()
 
 let cache = do
   let mutable id = -1

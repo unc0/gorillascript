@@ -446,7 +446,7 @@
           function Cache() {
             var _this;
             _this = this instanceof Cache ? this : __create(_Cache_prototype);
-            _this.weakmap = WeakMap();
+            _this.weakmap = new WeakMap();
             return _this;
           }
           _Cache_prototype = Cache.prototype;
@@ -26584,7 +26584,7 @@
             _this.scope = scope;
             _this.hasGeneratorNode = hasGeneratorNode;
             _this.currentCatch = [];
-            _this.redirects = Map();
+            _this.redirects = new Map();
             _this.start = GeneratorState(_this);
             _this.stop = GeneratorState(_this).add(function () {
               return ast.Return(pos, ast.Obj(pos, [
@@ -26634,7 +26634,7 @@
           _GeneratorBuilder_prototype._calculateCaseIds = function () {
             var _arr, _i, _len, caseIds, id, state;
             id = -1;
-            caseIds = this.caseIds = Map();
+            caseIds = this.caseIds = new Map();
             for (_arr = __toArray(this.statesOrder), _i = 0, _len = _arr.length; _i < _len; ++_i) {
               state = _arr[_i];
               if (!this.redirects.has(state)) {

@@ -379,7 +379,7 @@ class GeneratorState
 class GeneratorBuilder
   def constructor(@pos as {}, @scope as Scope, @has-generator-node as ->)
     @current-catch := []
-    @redirects := Map()
+    @redirects := new Map()
     @start := GeneratorState(this)
     @stop := GeneratorState(this).add #-> ast.Return pos, ast.Obj pos, [
       ast.Obj.Pair pos, \done, ast.Const pos, true
@@ -418,7 +418,7 @@ class GeneratorBuilder
   
   def _calculate-case-ids()!
     let mutable id = -1
-    let case-ids = @case-ids := Map()
+    let case-ids = @case-ids := new Map()
     for state in @states-order
       if not @redirects.has state
         case-ids.set state, (id += 1)
