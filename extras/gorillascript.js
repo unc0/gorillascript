@@ -30145,11 +30145,12 @@
       var exports = this;
       (function (GLOBAL) {
         "use strict";
-        var __defer, __everyPromise, __generatorToPromise, __import, __isArray, __lte,
-            __num, __owns, __promise, __promiseLoop, __slice, __strnum, __toArray,
-            __toPromise, __typeof, _ref, ast, fetchAndParsePreludeMacros, fs, init,
-            isAcceptableIdent, os, parser, path, real__filename, setImmediate,
-            SourceMap, writeFileWithMkdirp, writeFileWithMkdirpSync;
+        var __defer, __everyPromise, __generatorToPromise, __import, __is, __isArray,
+            __lte, __num, __owns, __promise, __promiseLoop, __slice, __strnum,
+            __toArray, __toPromise, __typeof, _ref, ast, fetchAndParsePreludeMacros,
+            fs, init, isAcceptableIdent, os, parser, path, real__filename,
+            setImmediate, SourceMap, SourceMapConsumer, writeFileWithMkdirp,
+            writeFileWithMkdirpSync;
         __defer = (function () {
           function __defer() {
             var deferred, isError, value;
@@ -30357,6 +30358,14 @@
           }
           return dest;
         };
+        __is = typeof Object.is === "function" ? Object.is
+          : function (x, y) {
+            if (x === y) {
+              return x !== 0 || 1 / x === 1 / y;
+            } else {
+              return x !== x && y !== y;
+            }
+          };
         __isArray = typeof Array.isArray === "function" ? Array.isArray
           : (function (_toString) {
             return function (x) {
@@ -30559,6 +30568,7 @@
         fs = require("fs");
         path = require("path");
         SourceMap = require("./source-map");
+        SourceMapConsumer = require("source-map").SourceMapConsumer;
         _ref = require("./utils");
         writeFileWithMkdirp = _ref.writeFileWithMkdirp;
         writeFileWithMkdirpSync = _ref.writeFileWithMkdirpSync;
@@ -31190,6 +31200,9 @@
                 }
                 sync = options.sync;
                 startTime = new Date().getTime();
+                if (options.filename) {
+                  options.sourceMap = SourceMap(options.filename, null, "");
+                }
                 _state = sync ? 1 : 2;
                 break;
               case 1:
@@ -31669,6 +31682,88 @@
           }
           return exports["eval"].sync(source, (_ref = __import({}, options), _ref.sync = true, _ref));
         };
+        function patchStackTrace(options) {
+          if (options.stackTracePatched) {
+            return;
+          }
+          options.stackTracePatched = true;
+          return Error.prepareStackTrace = function (err, stack) {
+            var _arr, _arr2, _i, _len, frame, frames;
+            function getSourceMapping(pos) {
+              var mapping;
+              mapping = new SourceMapConsumer(options.sourceMap.toString());
+              return mapping.originalPositionFor(pos);
+            }
+            function formatSourcePosition(frame) {
+              var asLine, column, fileLocation, fileName, functionName, isConstructor,
+                  isMethodCall, line, methodName, source, tp, typeName;
+              fileLocation = "";
+              if (frame.isNative()) {
+                return fileLocation = "native";
+              } else {
+                if (frame.isEval()) {
+                  fileName = frame.getScriptNameOrSourceURL();
+                  if (!fileName) {
+                    fileLocation = __strnum(frame.getEvalOrigin()) + ", ";
+                  }
+                } else {
+                  fileName = frame.getFileName();
+                }
+                if (!fileName) {
+                  fileName = "<anonymous>";
+                }
+                line = frame.getLineNumber();
+                column = frame.getColumnNumber();
+                source = getSourceMapping({ line: line, column: column });
+                if (__num(fileName.indexOf(".js")) < 1) {
+                  if (source.line != null) {
+                    fileLocation = __strnum(fileName) + ":" + __strnum(source.line) + ":" + __strnum(source.column) + ", <js>:" + __strnum(line) + ":" + __strnum(column);
+                  } else {
+                    fileLocation = __strnum(fileName) + " <js>:" + __strnum(line) + ":" + __strnum(column);
+                  }
+                } else {
+                  fileLocation = __strnum(fileName) + ":" + __strnum(line) + ":" + __strnum(column);
+                }
+                functionName = frame.getFunctionName();
+                isConstructor = frame.isConstructor();
+                isMethodCall = !frame.isToplevel() && !isConstructor;
+                if (isMethodCall) {
+                  methodName = frame.getMethodName();
+                  typeName = frame.getTypeName();
+                  if (functionName) {
+                    tp = "";
+                    asLine = "";
+                    if (typeName && functionName.indexOf(typeName)) {
+                      tp = __strnum(typeName) + ".";
+                    }
+                    if (methodName && !__is(functionName.indexOf("." + __strnum(methodName)), __num(functionName.length) - __num(methodName.length) - 1)) {
+                      asLine = " [as " + __strnum(methodName) + "]";
+                    }
+                    return tp + __strnum(functionName) + asLine + " (" + fileLocation + ")";
+                  } else {
+                    return __strnum(typeName) + "." + __strnum(methodName || "<anonymous>") + " (" + fileLocation + ")";
+                  }
+                } else if (isConstructor) {
+                  return "new " + __strnum(functionName || "<anonymous>") + " (" + fileLocation + ")";
+                } else if (functionName) {
+                  return __strnum(functionName) + " (" + fileLocation + ")";
+                } else {
+                  return fileLocation;
+                }
+              }
+            }
+            _arr = [];
+            for (_arr2 = __toArray(stack), _i = 0, _len = _arr2.length; _i < _len; ++_i) {
+              frame = _arr2[_i];
+              if (__is(frame.getFunction(), exports.run)) {
+                break;
+              }
+              _arr.push("  at " + __strnum(formatSourcePosition(frame)));
+            }
+            frames = _arr;
+            return err.toString() + "\n" + frames.join("\n") + "\n";
+          };
+        }
         exports.run = __promise(function (source, options) {
           var _e, _send, _state, _step, _throw, compiled, mainModule, Module, sync;
           _state = 0;
@@ -31682,6 +31777,7 @@
                 if (options == null) {
                   options = {};
                 }
+                options.stackTracePatched = false;
                 sync = options.sync;
                 _state = typeof process === "undefined" ? 1 : 5;
                 break;
@@ -31732,6 +31828,7 @@
                 compiled = _received;
                 ++_state;
               case 10:
+                patchStackTrace(options);
                 _state = 12;
                 return {
                   done: true,
@@ -35824,11 +35921,11 @@
                     AST$(
                       17,
                       1854,
-                      14,
+                      18,
                       0,
                       "WeakMap"
                     ),
-                    0
+                    1
                   )
                 ),
                 AST$(
@@ -36244,11 +36341,11 @@
                                   AST$(
                                     17,
                                     1864,
-                                    1,
+                                    14,
                                     0,
                                     "WeakMap"
                                   ),
-                                  0
+                                  1
                                 )
                               )
                             ),
@@ -36412,7 +36509,7 @@
                 )
               )
             ),
-            type: TYPE$["function"],
+            type: TYPE$.generic(TYPE$.functionBase, TYPE$.notUndefinedOrNull),
             dependencies: ["__toArray", "WeakMap"]
           },
           __range: {
@@ -76848,7 +76945,11 @@
               node = this.macroExpand1(node);
               if (node.isInternalCall("array")) {
                 if (node.args.length === 0) {
-                  return __call(void 0, __symbol(void 0, "ident", "Set"));
+                  return __call(
+                    void 0,
+                    __symbol(void 0, "internal", "new"),
+                    __symbol(void 0, "ident", "Set")
+                  );
                 } else {
                   parts = [];
                   tmp = this.tmp("x");
@@ -76936,7 +77037,11 @@
                             false,
                             false
                           ),
-                          value: __call(void 0, __symbol(void 0, "ident", "Set"))
+                          value: __call(
+                            void 0,
+                            __symbol(void 0, "internal", "new"),
+                            __symbol(void 0, "ident", "Set")
+                          )
                         }
                       },
                       true,
@@ -76979,7 +77084,11 @@
                           false,
                           false
                         ),
-                        value: __call(void 0, __symbol(void 0, "ident", "Set"))
+                        value: __call(
+                          void 0,
+                          __symbol(void 0, "internal", "new"),
+                          __symbol(void 0, "ident", "Set")
+                        )
                       }
                     },
                     true,
@@ -77083,7 +77192,11 @@
               if (node.isInternalCall("object")) {
                 pairs = node.args;
                 if (pairs.length === 0) {
-                  return __call(void 0, __symbol(void 0, "ident", "Map"));
+                  return __call(
+                    void 0,
+                    __symbol(void 0, "internal", "new"),
+                    __symbol(void 0, "ident", "Map")
+                  );
                 } else {
                   parts = [];
                   for (_arr = __toArray(pairs), _i = 1, _len = _arr.length; _i < _len; ++_i) {
@@ -77135,7 +77248,11 @@
                             false,
                             false
                           ),
-                          value: __call(void 0, __symbol(void 0, "ident", "Map"))
+                          value: __call(
+                            void 0,
+                            __symbol(void 0, "internal", "new"),
+                            __symbol(void 0, "ident", "Map")
+                          )
                         }
                       },
                       true,
@@ -77179,7 +77296,11 @@
                           false,
                           false
                         ),
-                        value: __call(void 0, __symbol(void 0, "ident", "Map"))
+                        value: __call(
+                          void 0,
+                          __symbol(void 0, "internal", "new"),
+                          __symbol(void 0, "ident", "Map")
+                        )
                       }
                     },
                     true,

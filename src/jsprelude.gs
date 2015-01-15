@@ -1851,7 +1851,7 @@ macro for
       $current
 
 macro helper __generic-func = #(num-args as Number, make as ->)
-  let cache = WeakMap()
+  let cache = new WeakMap()
   let any = {}
   let generic = #
     for reduce i in num-args - 1 to 0 by -1, current = cache
@@ -1861,7 +1861,7 @@ macro helper __generic-func = #(num-args as Number, make as ->)
         item := if i == 0
           make@ this, ...arguments
         else
-          WeakMap()
+          new WeakMap()
         current.set type, item
       item
   let result = generic()
@@ -3726,7 +3726,7 @@ macro operator unary set! with type: \object, label: \construct-set
   node := @macro-expand-1 node
   if node.is-internal-call \array
     if node.args.length == 0
-      ASTE Set()
+      ASTE new Set()
     else
       let parts = []
       let tmp = @tmp \x
@@ -3737,13 +3737,13 @@ macro operator unary set! with type: \object, label: \construct-set
         else
           parts.push AST(el) $set.add $el
       AST
-        let $set = Set()
+        let $set = new Set()
         $parts
         $set
   else
     let item = @tmp \x
     AST
-      let $set as Set = Set()
+      let $set as Set = new Set()
       for $item in $node
         $set.add $item
       $set
@@ -3755,7 +3755,7 @@ macro operator unary map! with type: \object, label: \construct-map
   if node.is-internal-call \object
     let pairs = node.args
     if pairs.length == 0
-      ASTE Map()
+      ASTE new Map()
     else
       let parts = []
       for pair in pairs[1 to -1]
@@ -3763,14 +3763,14 @@ macro operator unary map! with type: \object, label: \construct-map
           @error "Cannot use map! on an object with custom properties", pair
         parts.push AST(pair) $map.set $(pair.args[0]), $(pair.args[1])
       AST
-        let $map as Map = Map()
+        let $map as Map = new Map()
         $parts
         $map
   else
     let key = @tmp \k
     let value = @tmp \v
     AST
-      let $map as Map = Map()
+      let $map as Map = new Map()
       for $key, $value of $node
         $map.set $key, $value
       $map
