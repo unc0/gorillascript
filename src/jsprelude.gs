@@ -1150,7 +1150,7 @@ macro do
           f i + 1
       f 0
       @call(
-        @func(params, @internal-call(\auto-return, body), true)
+        @func(params, @internal-call(\auto-return, @macro-expand-all(body)), true)
         values)
     else
       ASTE (#@ -> $body)()
