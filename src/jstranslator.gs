@@ -1941,17 +1941,14 @@ let translate-lispy-internal = [] <<<
   
   [ParserNodeInternalId.TryCatch]: #(node, args, scope, location, unassigned)
     let t-try-body = translate args[0], scope, \statement, unassigned
-    let inner-scope = scope.clone(false)
-    let t-catch-ident = translate args[1], inner-scope, \left-expression
-    let t-catch-body = translate args[2], inner-scope, \statement, unassigned
+    let t-catch-ident = translate args[1], scope, \left-expression
+    let t-catch-body = translate args[2], scope, \statement, unassigned
     #
       let catch-ident = t-catch-ident()
       if catch-ident instanceof ast.Ident
-        inner-scope.add-variable catch-ident
-        inner-scope.mark-as-param catch-ident
-      let result = ast.TryCatch get-pos(node), t-try-body(), catch-ident, t-catch-body()
-      scope.variables <<< inner-scope.variables
-      result
+        scope.add-variable catch-ident
+        scope.mark-as-param catch-ident
+      ast.TryCatch get-pos(node), t-try-body(), catch-ident, t-catch-body()
   
   [ParserNodeInternalId.TryFinally]: #(node, args, scope, location, unassigned)
     let t-try-body = translate args[0], scope, \statement, unassigned
